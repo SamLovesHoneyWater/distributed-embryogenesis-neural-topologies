@@ -1,4 +1,4 @@
-# Distributed Embryogenic Neural Topologies
+# Distributed Embryogenesis of Neural Topologies
 
 ## Introduction
 
