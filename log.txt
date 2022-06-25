@@ -1,0 +1,47 @@
+Distributed Embryogenesis of Neural Topologies
+v0.4 Logs and Descriptions
+Version v0.4 is created on 2021/06/21
+
+Project Name Candidates:
+Distributed Embryogenesis of Neural Topologies (DENT)
+Developmental Encodings for Cell-based Embryogenesis of Neural Topologies (DECENT)
+Developmental Encodings for Nodes in Evolved Topologies (DeNet)
+
+Log
+2021/06/09	Implemented network visualization with networkX
+    			Need to further optimize visual experience of networkX
+    		Encountered RecursionError: maximum recursion depth exceeded in comparison
+    			Also, recursion is slow
+    			Inefficiency in both space and time
+    			Need to find a new approach to feed-forward
+    			Perhaps take a look at how NEAT algorithms are implemented
+    		Mutation and reproduction algorithms seem to take a lot of time
+    			No actual timer measurement yet
+    			Need to measure
+    			If indeed time-consuming, need to think of ways to optimize
+    		Mutation and reproduction algorithms are stupid and bias the search space
+    			Need to rework how genes are mutated and agents are reproduced
+
+2021/06/21  Responding to previous development logs:
+                NEAT algorithms are implemented without back prop, hence no Tensorflow
+                RecursionError should be caused by loops in should-be acyclic graphs
+            Added DAG ensurement
+                Time consumption (in complex topologies) not investigated
+
+2021/08/31  Switching to an easier task:
+                Small dimensionality visual classification
+                Replicated "retina" example in Clune's modularity paper
+                'The evolutionary origins of modularity' by Jeff Clune et al
+            Fixed fitness-descent
+                Such a stupid bug
+            Ideas to more effective evolution:
+                Introduce connection cost and Pareto frontiers
+
+2021/09/02  Adding more diverse mutation methods
+                Allowing a connection gene to mutate so as to be followed by a new
+                    insertion gene that inserts a node on the connectinon created
+                Randomly creating a new connection gene at the end of the genome
+            Ideas to more effective evolution:
+                Introduce Pareto frontiers (as per Aug 31st)
+                Use same initial markings for all i/o nodes (-1/-2)
+                Introduce initial asymmetry (need more thought)
