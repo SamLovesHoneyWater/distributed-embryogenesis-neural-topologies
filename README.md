@@ -1,5 +1,7 @@
 # Distributed Embryogenesis of Neural Topologies
 
+Last updated 2021/06/21
+
 ## Introduction
 
 This project generates neural network architectures through a cell-based, bottom-up approach. Instructions are given to individual neurons on how to connect to each other and produce new neurons. Starting from a minimal network strucutre, more complicated topologies emerge through the distributed, spontaneous developments of individual neurons. The cell-based instructions are gradually optimized through evolutionary algorithm.
