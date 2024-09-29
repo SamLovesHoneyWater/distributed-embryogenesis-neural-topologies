@@ -2,6 +2,8 @@
 
 Last updated 2021/06/21
 
+![A neural connection topology graph showing modularity, symmetry, and asymmetry](evolved-topologies/G23.png)
+
 ## Introduction
 
 This project generates neural network architectures through a cell-based, bottom-up approach. Instructions are given to individual neurons on how to connect to each other and produce new neurons. Starting from a minimal network structure, more complicated topologies emerge through the distributed, spontaneous developments of individual neurons. The cell-based instructions are gradually optimized through evolutionary algorithm.
