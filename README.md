@@ -16,8 +16,7 @@ Dataset.py generates a toy dataset which imitates visual stimulations to two ret
 
 There is abundant research on automatic generation of more efficient neural network architectures. One fundamental question for those attempts is how neural architecture should be represented in code.
 
-Stochastic methods such as NEAT (Neural Evolution of Augmenting Topologies) adopt the "blueprint" approach, in which the object to be optimized is an explicit statement of the nodes and connections in a neural topology.
-On the other hand, gradient-based approaches, notably represented by NAS (Neural Architecture Search), uses an RNN to iteratiely construct the desired neural network. Yet arguably they still adopt a "top-down" approach, where the RNN masterminds the entire network topology.
+NAS methods such as NEAT (Neural Evolution of Augmenting Topologies) adopt the "blueprint" approach, in which the object to be optimized is an explicit statement of the nodes and connections in a neural topology.
 
 This approach has a few shortcomings. One notable example is __modularity__. When a successful local topology is produced, it is unclear how we can replicate that local success to other parts where it would also be helpful, without explicitly coding replication of modules.
 It is helpful to think about how modularity emerges in biological organisms. The human body (and its brain) is created not through a top-down approach, but a bottom-up one. In an embryogenic state (and also after birth), cells interact, change, and split (create new cells) in a localized/distributed manner according to instructions given by genes, and macro structures emerge therefrom.
