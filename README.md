@@ -2,7 +2,7 @@
 
 Last updated 2021/06/21
 
-![A neural connection topology graph showing modularity, symmetry, and asymmetry](evolved_topologies/G19.png)
+![A neural connection topology graph showing modularity, symmetry, and asymmetry](evolved_topologies/G18.png)
 
 ## Introduction
 
