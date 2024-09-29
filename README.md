@@ -10,12 +10,15 @@ This project generates neural network architectures through a cell-based, bottom
 
 The neural networks start with basic structures connection input nodes (green) to output nodes (red).
 After a few generations, some networks learn to develop hidden layers by connection useful inputs to a couple of intermediary neurons, as shown below. 
+
 ![A neural connection topology graph showing a very basic structure, with some asymmetry](evolved_topologies/G09.png)
 
 The topology of hidden layers are further developed as evolution continues. We begin to see symmetrical topologies when such topologies are beneficial to the task at hand.
+
 ![A neural connection topology graph showing two symmetric loops of hidden neurons taking input from selected inputs](evolved_topologies/G10.png)
 
 Finally, a complicated web of neurons developed, showcasing that the algorithm is able to develop advanced neural structures that are optimized on tasks.
+
 ![A neural connection topology graph showing modularity, symmetry, and asymmetry](evolved_topologies/G23.png)
 
 
