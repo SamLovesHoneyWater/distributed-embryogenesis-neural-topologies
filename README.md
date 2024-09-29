@@ -19,8 +19,8 @@ There is abundant research on automatic generation of more efficient neural netw
 Stochastic methods such as NEAT (Neural Evolution of Augmenting Topologies) adopt the "blueprint" approach, in which the object to be optimized is an explicit statement of the nodes and connections in a neural topology.
 On the other hand, gradient-based approaches, notably represented by NAS (Neural Architecture Search), uses an RNN to iteratiely construct the desired neural network. Yet arguably they still adopt a "top-down" approach, where the RNN masterminds the entire network topology.
 
-This approach has many shortcomings. One notable example is __modularity__. When a successful local topology is produced, it is unclear how we can replicate that local success to other parts where it would also be helpful, without explicitly coding replication of modules.
-It is helpful to think about how modularity emerges in biological organisms. For example, why do mutations create babies with 6 fingers on a hand, but not 5.5 fingers? This is because the human body (and its brain) is created not through a top-down approach, but a bottom-up one. In an embryogenic state (and also after birth), cells interact, change, and split (create new cells) according to instructions given by genes, and structures emerge therefrom. For cells in similar conditions, they follow similar developmental paths, creating similar structures that are seemingly "modular".
+This approach has a few shortcomings. One notable example is __modularity__. When a successful local topology is produced, it is unclear how we can replicate that local success to other parts where it would also be helpful, without explicitly coding replication of modules.
+It is helpful to think about how modularity emerges in biological organisms. The human body (and its brain) is created not through a top-down approach, but a bottom-up one. In an embryogenic state (and also after birth), cells interact, change, and split (create new cells) in a localized/distributed manner according to instructions given by genes, and macro structures emerge therefrom.
 
 ## Examples
 
@@ -29,11 +29,11 @@ After a few generations, some networks learn to develop hidden layers by connect
 
 ![A neural connection topology graph showing a very basic structure, with some asymmetry](evolved_topologies/G09.png)
 
-The topology of hidden layers are further developed as evolution continues. We begin to see symmetrical topologies when such topologies are beneficial to the task at hand.
+The topology of hidden layers are further developed as evolution continues. We begin to see symmetry/modularity topologies when such topologies are beneficial to the task at hand. In our case, the toy dataset simulates binocular vision, and consequently two copies of a similar structures seems to have emerged. 
 
 ![A neural connection topology graph showing two symmetric loops of hidden neurons taking input from selected inputs](evolved_topologies/G10.png)
 
-Finally, a complicated web of neurons developed, showcasing that the algorithm is able to develop advanced neural structures that are optimized on tasks.
+Finally, a complicated web of neurons developed, showcasing that the algorithm is able to develop advanced modularized neural structures to fit the data.
 
 ![A neural connection topology graph showing modularity, symmetry, and asymmetry](evolved_topologies/G23.png)
 
