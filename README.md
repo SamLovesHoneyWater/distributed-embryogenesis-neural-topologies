@@ -18,8 +18,8 @@ There is abundant research on automatic generation of more efficient neural netw
 
 NAS methods such as NEAT (Neural Evolution of Augmenting Topologies) adopt the "blueprint" approach, in which the object to be optimized is an explicit statement of the nodes and connections in a neural topology.
 
-This approach has a few shortcomings. One notable example is __modularity__. When a successful local topology is produced, it is unclear how we can replicate that local success to other parts where it would also be helpful, without explicitly coding replication of modules.
-It is helpful to think about how modularity emerges in biological organisms. The human body (and its brain) is created not through a top-down approach, but a bottom-up one. In an embryogenic state (and also after birth), cells interact, change, and split (create new cells) in a localized/distributed manner according to instructions given by genes, and macro structures emerge therefrom.
+One notable shortcomings of such approaches is __modularity__. When a successful local topology is produced, it is unclear how we can replicate that local success to other parts where it would also be helpful, without explicitly coding replication of modules.
+I take inspiration from the mechanisms behind biological modularity. The human body (and its brain) is created not through a top-down approach, but a bottom-up one. In an embryogenic state (and also after birth), cells interact, change, and split (create new cells) in a localized/distributed manner according to instructions given by genes, and macro structures emerge therefrom.
 
 ## Examples
 
