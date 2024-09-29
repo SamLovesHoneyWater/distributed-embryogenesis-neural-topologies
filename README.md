@@ -19,7 +19,7 @@ After a few generations, some networks learn to develop hidden layers by connect
 
 ![A neural connection topology graph showing a very basic structure, with some asymmetry](evolved_topologies/G09.png)
 
-The topology of hidden layers are further developed as evolution continues. We begin to see symmetry/modularity when such topologies are beneficial to the task at hand. In our case, the toy dataset simulates binocular vision, and consequently two copies of a similar structures seems to have emerged. 
+The topology of hidden layers are further developed as evolution continues. We begin to see symmetry/modularity when such topologies are beneficial to the task at hand. In our case, the toy dataset simulates binocular vision, and consequently two copies of a similar structures seem to have emerged. 
 
 ![A neural connection topology graph showing two symmetric loops of hidden neurons taking input from selected inputs](evolved_topologies/G10.png)
 
