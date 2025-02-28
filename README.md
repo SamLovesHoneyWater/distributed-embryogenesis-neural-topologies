@@ -49,3 +49,9 @@ This project is an attempt to make use of that biological inspiration. In this p
 (More detailed descriptions to come)
 
 See __log.txt__ for historical developments on the project, concerns, and possible paths for future improvement.
+
+## Future Work
+
+- Optimize neurogenesis runtime
+- Looks like some genes would create too much useless nodes. Add constraint to prevent this
+- More complicated test cases
