@@ -53,8 +53,8 @@ Central to the implementation are genes. A gene specifies an interaction ("opera
 
 The operator defines the type of topological change that would occur if the gene is activated. Currently, this is either addConnection or InsertNode
 
-* 0. addConnection: This operator looks for a nearby neuron and grows a connection to it.
-* 1. insertNode: This operator inserts a new neuron halfway between an existing connection between two neuron.
+* 0: addConnection - This operator looks for a nearby neuron and grows a connection to it.
+* 1: insertNode - This operator inserts a new neuron halfway between an existing connection between two neuron.
 
 These two basic operations (0: addConnection and 1: InsertNode) are inspired by NEAT, and should theoretically allow the construction of any feedforward neural network architecture.
 
