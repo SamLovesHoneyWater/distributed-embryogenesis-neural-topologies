@@ -1,6 +1,6 @@
 # Distributed Embryogenesis of Neural Topologies
 
-Project last updated 2021/06/21, README last updated September 2024
+Project last updated June 21, 2021. README last updated March 1, 2025.
 
 ![A neural connection topology graph showing modularity, symmetry, and asymmetry](evolved_topologies/G23.png)
 
