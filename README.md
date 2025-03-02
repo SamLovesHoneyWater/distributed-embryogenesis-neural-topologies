@@ -44,9 +44,47 @@ I take inspiration from the mechanisms behind biological modularity. The human b
 
 ## Implementation
 
-This project is an attempt to make use of that biological inspiration. In this project, every neural network goes through an embryogenic state where the topology is grown iteratively. Each neuron takes up a place in a two-dimensional space. They look for nearby neurons with certain attributes to establish neural connections. Those attributes include the neuron's in and out degrees (number of i/o neurons connected to it), its path of historical development in embryogeny, and its distance from the target neuron. If two neurons already have a connection weight in between them, they would also consider spawning a new neuron half-way on that connection. These two basic operations (addConnection and InsertNode) are inspired by NEAT, and should theoretically allow the construction of any feedforward neural network architecture.
+This project is an attempt to make use of that biological inspiration. In this project, every neural network goes through an embryogenic state where the topology is grown iteratively.
+Each neuron takes up a place in a two-dimensional space and interact with a local environment to develop a network topology.
 
-(More detailed descriptions to come)
+Central to the implementation are genes. A gene specifies an interaction ("operator") with another neuron and the conditions under which this interaction should happen.
+
+### Operator
+
+The operator defines the type of topological change that would occur if the gene is activated. Currently, this is either addConnection or InsertNode
+
+* 0. addConnection: This operator looks for a nearby neuron and grows a connection to it.
+* 1. insertNode: This operator inserts a new neuron halfway between an existing connection between two neuron.
+
+These two basic operations (0: addConnection and 1: InsertNode) are inspired by NEAT, and should theoretically allow the construction of any feedforward neural network architecture.
+
+### Selectivity
+
+Genes are not always active. Instead, only a subset of genes are expressed in each type of biological cell. Furthermore, neurons choose to develop a connection to another neuron based on the specific characteristics of the target neuron. For example, in the retina, bipolar cells would connect to ganglion cells.
+
+To simulate this, for each neuron, we would need information to answer the question: _What kind of cell is this?_
+In this project, I implement this information by using "historical markings" (frequently referred to as "hm" in code).
+The HM of a neuron is the sequence of the gene operators that influenced the neuron.
+For example, if a neuron first grew connections with three neurons and then inserted new neurons in two of those connections, then the HM of that node would be "00011".
+The intuition here is that the "developmental history" of a cell is a good surrogate for the type of cell it is now. If two cells have similar HM sequences, then they might be similar cells.
+
+A gene specifies two HM sequences, one for the originating node and one for the target node. The operator of a gene will only apply between a pair of neurons if both HM sequences match those specified in the gene:
+
+* own_historical_marking - The developmental path that the neuron should have taken for the gene to be active.
+
+* target_historical_marking - The developmental path that the target neuron should have taken for the gene to be active.
+
+### Spatial Locality
+
+Each neuron looks for nearby neurons with the above attributes to either establish neural connections or insert new neurons. We have a 2D grid of neurons to implement spatial locality.
+
+### The Gene Object
+
+Despite operator, own_HM, and target_HM, a gene also has the following two fields:
+
+* uses_before_expiration - This controls the number of times the gene can be activated in a neuron before it will be permanently disabled by the neuron. This is aimed at prevent the neural topology from growing forever. Each neuron maintains its own counter for a gene, so a gene can be disabled in some neurons but not others.
+
+* new_connection_weight - This specifies the weight of the connection when doing a feed-forward pass, just like any other neural network.
 
 See __log.txt__ for historical developments on the project, concerns, and possible paths for future improvement.
 
