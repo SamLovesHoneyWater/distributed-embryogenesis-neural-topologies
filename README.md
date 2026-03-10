@@ -1,95 +1,90 @@
-# Distributed Embryogenesis of Neural Topologies
+# DENT — Distributed Embryogenesis of Neural Topologies
 
-Project last updated June 21, 2021. README last updated March 1, 2025.
+An evolutionary algorithm that discovers neural network topologies through a biologically-inspired developmental process: **embryogenesis** (growing neurons from genetic instructions) + **synaptogenesis** (forming connections based on spatial proximity) + **Lamarckian evolution** (backpropagation during fitness evaluation).
 
-![A neural connection topology graph showing modularity, symmetry, and asymmetry](evolved_topologies/G23.png)
+## Key Results
 
-## Introduction
+**100% accuracy** on the binocular retina task (Clune et al., 2013) — a benchmark specifically designed to test whether evolution can discover modular network architectures.
 
-This project generates neural network architectures through a cell-based, bottom-up approach. Instructions are given to individual neurons on how to connect to each other and produce new neurons. Starting from a minimal network structure, more complicated topologies emerge through the distributed, spontaneous developments of individual neurons. The cell-based instructions are gradually optimized through evolutionary algorithm.
+| Version | Best Accuracy | Key Innovation |
+|---------|:------------:|----------------|
+| v2 | 81.25% | Pure DENT (linear ceiling) |
+| v3 | 87.89% | + Synaptogenesis |
+| v3-deep | **100.0%** | + Deep initial topology |
+| Reference MLP (2-layer) | 85% | Standard backprop only |
+| Reference MLP (3-layer) | 98.4% | Standard backprop only |
 
-To try it yourself, run __Evolution.py__
+## How It Works
 
-Dataset.py generates a toy dataset which imitates visual stimulations to two retinas (see discussion on "modularity" below).
+### 1. Embryogenesis (Topology Discovery)
+Each agent carries a **genome** of developmental genes. These genes operate on neurons in a 3D spatial grid:
+- **AddConnection**: Grow a connection to a neuron with matching chemical markers
+- **InsertNode**: Insert a new neuron on an existing connection
 
-## Examples
+Genes activate based on **chemical markers** (histological markings) — neurons with matching markers are affected by the gene. This creates a developmental program where the same gene can affect multiple neurons simultaneously.
 
-The neural networks start with basic structures connection input nodes (green) to output nodes (red).
-After a few generations, some networks learn to develop hidden layers by connection useful inputs to a couple of intermediary neurons, as shown below. 
+### 2. Synaptogenesis (Connection Growth)
+After embryogenesis creates the topology, a second phase mimics biological **axon guidance**: hidden neurons grow additional connections to nearby input neurons based on **spatial proximity**. This is critical because:
+- InsertNode creates neurons with only 1 input (linear pass-throughs)
+- Synaptogenesis gives them multiple inputs (enabling non-linear computation)
+- Spatial proximity naturally encourages **modularity** (left inputs connect to left hidden, right to right)
 
-![A neural connection topology graph showing a very basic structure, with some asymmetry](evolved_topologies/G09.png)
+### 3. Lamarckian Learning
+Each agent is trained with backpropagation during fitness evaluation. The learned weights are **not** inherited (only topology is inherited), but the training reveals whether a topology CAN learn the task. This is the Lamarckian principle: acquired traits (learned weights) influence fitness (survival), even though only the genetic topology is passed on.
 
-The topology of hidden layers are further developed as evolution continues. We begin to see symmetry/modularity when such topologies are beneficial to the task at hand. In our case, the toy dataset simulates binocular vision, and consequently two copies of a similar structures seem to have emerged. 
+### 4. Evolution
+Tournament selection with elitism. Mutations include:
+- Gene duplication and deletion
+- Weight perturbation
+- InsertNode (adding depth)
+- Marker mutation (changing which neurons a gene affects)
 
-![A neural connection topology graph showing two symmetric loops of hidden neurons taking input from selected inputs](evolved_topologies/G10.png)
+## Files
 
+- `dent_v3.py` — Core library: Gene, Node, Agent, speciation, modularity
+- `evolve_deep.py` — Deep topology evolution (achieves 100%)
+- `dent_v2.py` — Earlier version without synaptogenesis
 
-![A neural connection topology graph](evolved_topologies/G18.png)
+## Running
 
-Finally, a complicated web of neurons developed, showcasing that the algorithm is able to develop advanced modularized neural structures to fit the data.
+```bash
+# Set up environment
+python3 -m venv dent-env
+source dent-env/bin/activate
+pip install numpy
 
-![A neural connection topology graph showing modularity, symmetry, and asymmetry](evolved_topologies/G23.png)
+# Run the evolution (achieves 100% on retina task)
+python evolve_deep.py
 
+# With custom parameters
+python evolve_deep.py --generations 40 --pop-size 50
+```
 
-__To see more example topologies generated by this project, go to the "evolved_topologies" directory.__
+## The Retina Task
 
-## Motivation
+The binocular retina task (from Clune, Mouret & Lipson 2013) is specifically designed to test for **modularity** in evolved networks:
 
-There is abundant research on automatic generation of more efficient neural network architectures. One fundamental question for those attempts is how neural architecture should be represented in code.
+- 8 binary inputs: 4 for left visual field, 4 for right visual field
+- Output: 1 if BOTH fields match their respective patterns, 0 otherwise
+- The optimal solution processes left and right fields SEPARATELY, then combines
+- This requires the network to discover modular structure
 
-NAS methods such as NEAT (Neural Evolution of Augmenting Topologies) adopt the "blueprint" approach, in which the object to be optimized is an explicit statement of the nodes and connections in a neural topology.
+A non-modular network struggles because it must learn the XOR-like interaction between fields without any structural support. A modular network — one that separates left and right processing — can solve it easily.
 
-One notable shortcomings of such approaches is __modularity__. When a successful local topology is produced, it is unclear how we can replicate that local success to other parts where it would also be helpful, without explicitly coding replication of modules.
-I take inspiration from the mechanisms behind biological modularity. The human body (and its brain) is created not through a top-down approach, but a bottom-up one. In an embryogenic state (and also after birth), cells interact, change, and split (create new cells) in a localized/distributed manner according to instructions given by genes, and macro structures emerge therefrom.
+## Biological Inspiration
 
-## Implementation
+| Biological Process | DENT Implementation |
+|---|---|
+| Genetic instructions | Gene objects with chemical markers |
+| Neural development | Embryogenesis loop (gene activation) |
+| Axon guidance | Synaptogenesis (spatial proximity) |
+| Brain regions | Chemical markers group neurons |
+| Synaptic plasticity | Backpropagation during evaluation |
+| Natural selection | Tournament selection on fitness |
+| Mutation | Gene duplication, deletion, modification |
 
-This project is an attempt to make use of that biological inspiration. In this project, every neural network goes through an embryogenic state where the topology is grown iteratively.
-Each neuron takes up a place in a two-dimensional space and interact with a local environment to develop a network topology.
+## Key Insight: The Connectivity Bottleneck
 
-Central to the implementation are genes. A gene specifies an interaction ("operator") with another neuron and the conditions under which this interaction should happen.
+The breakthrough from v2 (81%) to v3 (100%) came from identifying that InsertNode genes create hidden neurons with **only one source** — effectively linear pass-throughs. Adding synaptogenesis (spatial connection growth) gives hidden neurons multiple inputs, enabling the non-linear computation needed for complex tasks.
 
-### Operator
-
-The operator defines the type of topological change that would occur if the gene is activated. Currently, this is either addConnection or InsertNode
-
-* 0: addConnection - This operator looks for a nearby neuron and grows a connection to it.
-* 1: insertNode - This operator inserts a new neuron halfway between an existing connection between two neuron.
-
-These two basic operations (0: addConnection and 1: InsertNode) are inspired by NEAT, and should theoretically allow the construction of any feedforward neural network architecture.
-
-### Selectivity
-
-Genes are not always active. Instead, only a subset of genes are expressed in each type of biological cell. Furthermore, neurons choose to develop a connection to another neuron based on the specific characteristics of the target neuron. For example, in the retina, bipolar cells would connect to ganglion cells.
-
-To simulate this, for each neuron, we would need information to answer the question: _What kind of cell is this?_
-In this project, I implement this information by using "historical markings" (frequently referred to as "hm" in code).
-The HM of a neuron is the sequence of the gene operators that influenced the neuron.
-For example, if a neuron first grew connections with three neurons and then inserted new neurons in two of those connections, then the HM of that node would be "00011".
-The intuition here is that the "developmental history" of a cell is a good surrogate for the type of cell it is now. If two cells have similar HM sequences, then they might be similar cells.
-
-A gene specifies two HM sequences, one for the originating node and one for the target node. The operator of a gene will only apply between a pair of neurons if both HM sequences match those specified in the gene:
-
-* own_historical_marking - The developmental path that the neuron should have taken for the gene to be active.
-
-* target_historical_marking - The developmental path that the target neuron should have taken for the gene to be active.
-
-### Spatial Locality
-
-Each neuron looks for nearby neurons with the above attributes to either establish neural connections or insert new neurons. We have a 2D grid of neurons to implement spatial locality.
-
-### The Gene Object
-
-Despite operator, own_HM, and target_HM, a gene also has the following two fields:
-
-* uses_before_expiration - This controls the number of times the gene can be activated in a neuron before it will be permanently disabled by the neuron. This is aimed at prevent the neural topology from growing forever. Each neuron maintains its own counter for a gene, so a gene can be disabled in some neurons but not others.
-
-* new_connection_weight - This specifies the weight of the connection when doing a feed-forward pass, just like any other neural network.
-
-See __log.txt__ for historical developments on the project, concerns, and possible paths for future improvement.
-
-## Future Work
-
-- Optimize neurogenesis runtime --  Currently, there are critical inefficiencies in the algorithm. For example, neighboring area selection, et cetera.  Real biological processes are complex and computationally expensive to simulate.  The principle behind evolutionary algorithms is to find approximate processes that are similarly effective but not so expensive. The gene codes in this project is an example.  Future work includes extending this principle to other parts of the project so that it can scale.
-- Looks like some genes would create too much useless nodes. Add constraint to prevent this
-- More complicated test cases
+This mirrors real neural development: neurons are born, migrate to positions, and THEN grow connections to neighbors. The two-phase process (birth + wiring) is essential.

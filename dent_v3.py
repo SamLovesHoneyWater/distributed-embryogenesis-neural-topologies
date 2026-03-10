@@ -55,8 +55,8 @@ class HyperParams:
     WEIGHT_INIT_SIGMA = 1.0
     
     # Fitness
-    CONNECTION_COST = 0.0002
-    CONNECTION_COST_WARMUP = 10
+    CONNECTION_COST = 0.00005
+    CONNECTION_COST_WARMUP = 20
     MODULARITY_BONUS = 0.1       # Bonus per unit of modularity Q
     MODULARITY_WARMUP = 5          # Start rewarding modularity after N gens
     
@@ -65,8 +65,8 @@ class HyperParams:
     REPRODUCTION_FRACTION = 0.7
     
     # Backprop (Lamarckian)
-    BACKPROP_EPOCHS = 100
-    BACKPROP_LR = 0.1
+    BACKPROP_EPOCHS = 200
+    BACKPROP_LR = 0.08
     BACKPROP_LR_MIN = 0.01
     BACKPROP_LR_DECAY = 0.95
     BACKPROP_BATCH_SIZE = 256
