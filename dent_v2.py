@@ -53,11 +53,17 @@ class HyperParams:
     WEIGHT_INIT_SIGMA = 1.0
     
     # Fitness
-    CONNECTION_COST = 0.001  # Penalty per connection (encourages parsimony)
+    CONNECTION_COST = 0.0005  # Penalty per connection (encourages parsimony)
+    CONNECTION_COST_WARMUP = 10  # No connection cost for first N generations
     
     # Reproduction
     ELITISM_FRACTION = 0.1
     REPRODUCTION_FRACTION = 0.7
+    
+    # Backprop (Lamarckian)
+    BACKPROP_EPOCHS = 50      # Epochs of SGD per agent during fitness eval
+    BACKPROP_LR = 0.1         # Learning rate for backprop  
+    BACKPROP_BATCH_SIZE = 256 # Batch size for backprop
 
 
 class Gene:
@@ -118,7 +124,10 @@ class Node:
     __slots__ = ['coords', 'node_type', 'markings', 'io_index',
                  'sources', 'weights', 'outgoing', 'bias',
                  'activation_fn', '_activation', '_fed',
-                 '_ancestors']
+                 '_ancestors',
+                 # Backprop caches
+                 '_pre_activation', '_input_stack', '_grad_output',
+                 '_weight_grads', '_bias_grad']
     
     def __init__(self, coords: Tuple[int, int, int], 
                  node_type: str = 'hidden',
@@ -136,6 +145,12 @@ class Node:
         self._activation = None
         self._fed = False
         self._ancestors: Optional[Set[int]] = None  # Cached ancestry
+        # Backprop state
+        self._pre_activation = None   # z = w @ x + b (before activation)
+        self._input_stack = None      # stacked source activations
+        self._grad_output = None      # dL/d(activation) accumulated from downstream
+        self._weight_grads = None
+        self._bias_grad = None
     
     def forward(self, batch_size: int) -> np.ndarray:
         """Feed-forward for this node. Returns activation array."""
@@ -158,6 +173,10 @@ class Node:
         
         # Weighted sum + bias
         z = w @ x + self.bias  # (batch_size,)
+        
+        # Cache for backprop
+        self._pre_activation = z
+        self._input_stack = x
         
         # Activation
         if self.activation_fn == 'relu':
@@ -200,6 +219,11 @@ class Node:
         """Reset activation state for new forward pass."""
         self._fed = False
         self._activation = None
+        self._pre_activation = None
+        self._input_stack = None
+        self._grad_output = None
+        self._weight_grads = None
+        self._bias_grad = None
 
 
 class Agent:
@@ -516,6 +540,147 @@ class Agent:
         self.fitness = accuracy - cost
         return self.fitness
     
+    def _topological_order(self) -> List[Node]:
+        """
+        Return nodes in topological order (sources before consumers).
+        Uses Kahn's algorithm.
+        """
+        in_degree = {}
+        for node in self.nodes:
+            in_degree[id(node)] = len(node.sources)
+        
+        # Start with nodes that have no incoming edges (inputs, disconnected)
+        queue = [n for n in self.nodes if in_degree[id(n)] == 0]
+        order = []
+        
+        while queue:
+            node = queue.pop(0)
+            order.append(node)
+            for child in node.outgoing:
+                in_degree[id(child)] -= 1
+                if in_degree[id(child)] == 0:
+                    queue.append(child)
+        
+        return order
+    
+    def train(self, x: np.ndarray, y: np.ndarray, 
+              epochs: int = 5, lr: float = 0.01, 
+              batch_size: int = 256) -> float:
+        """
+        Train the network weights via backpropagation for a few epochs.
+        Uses cross-entropy loss for classification.
+        Returns final accuracy.
+        
+        This allows evolution to focus on topology rather than weight luck.
+        """
+        n_samples = x.shape[0]
+        topo_order = self._topological_order()
+        
+        # Only train if we have connected outputs
+        has_connections = any(n.sources for n in self.output_nodes)
+        if not has_connections:
+            return 0.0
+        
+        for epoch in range(epochs):
+            # Shuffle data each epoch
+            perm = np.random.permutation(n_samples)
+            x_shuf = x[perm]
+            y_shuf = y[perm]
+            
+            for start in range(0, n_samples, batch_size):
+                end = min(start + batch_size, n_samples)
+                x_batch = x_shuf[start:end]
+                y_batch = y_shuf[start:end]
+                bs = x_batch.shape[0]
+                
+                # === Forward pass ===
+                for node in self.nodes:
+                    node.reset()
+                
+                # Set inputs
+                for node in self.nodes:
+                    if node.node_type == 'input':
+                        node._activation = x_batch[:, node.io_index]
+                        node._fed = True
+                
+                # Forward in topo order
+                for node in topo_order:
+                    node.forward(bs)
+                
+                # Collect output activations → softmax
+                raw_outputs = []
+                for node in self.output_nodes:
+                    a = node._activation if node._activation is not None else np.zeros(bs)
+                    raw_outputs.append(a)
+                logits = np.stack(raw_outputs, axis=1)  # (bs, n_output)
+                
+                # Softmax
+                logits_shifted = logits - np.max(logits, axis=1, keepdims=True)
+                exp_logits = np.exp(logits_shifted)
+                probs = exp_logits / (np.sum(exp_logits, axis=1, keepdims=True) + 1e-10)
+                
+                # === Cross-entropy loss gradient w.r.t. logits ===
+                # dL/d(logit_j) = prob_j - 1(y==j)
+                one_hot = np.zeros_like(probs)
+                one_hot[np.arange(bs), y_batch] = 1.0
+                dL_dlogits = (probs - one_hot) / bs  # (bs, n_output)
+                
+                # === Backward pass ===
+                # Initialize gradient accumulators
+                for node in self.nodes:
+                    node._grad_output = np.zeros(bs)
+                
+                # Seed output node gradients
+                for i, node in enumerate(self.output_nodes):
+                    node._grad_output = dL_dlogits[:, i]
+                
+                # Backward in reverse topo order
+                for node in reversed(topo_order):
+                    if node._grad_output is None:
+                        continue
+                    if not node.sources:
+                        continue
+                    
+                    grad_a = node._grad_output  # dL/d(activation), shape (bs,)
+                    
+                    # Gradient through activation function → dL/dz
+                    if node.activation_fn == 'relu':
+                        if node._pre_activation is not None:
+                            grad_z = grad_a * (node._pre_activation > 0).astype(float)
+                        else:
+                            grad_z = grad_a
+                    elif node.activation_fn == 'sigmoid':
+                        a = node._activation
+                        if a is not None:
+                            grad_z = grad_a * a * (1 - a)
+                        else:
+                            grad_z = grad_a
+                    else:  # linear
+                        grad_z = grad_a
+                    
+                    # dL/d(weight_i) = sum_over_batch(grad_z * source_i_activation)
+                    # dL/d(bias) = sum_over_batch(grad_z)
+                    # dL/d(source_i_activation) += weight_i * grad_z
+                    
+                    for j, src in enumerate(node.sources):
+                        src_act = src._activation if src._activation is not None else np.zeros(bs)
+                        
+                        # Weight gradient
+                        dw = np.sum(grad_z * src_act)
+                        
+                        # Propagate gradient to source
+                        src._grad_output += node.weights[j] * grad_z
+                        
+                        # Update weight with SGD
+                        node.weights[j] -= lr * dw
+                    
+                    # Bias gradient
+                    db = np.sum(grad_z)
+                    node.bias -= lr * db
+        
+        # Return final accuracy
+        return self.get_accuracy(x, y)
+    
     def reproduce(self, hm_list: List[str]) -> 'Agent':
         """Create a mutated offspring."""
         new_genes = []
@@ -625,10 +790,22 @@ def generate_retina_dataset(x_size=2, y_size=2):
     return np.array(data_x, dtype=np.float32), np.array(data_y, dtype=np.int32)
 
 
-def evolve(generations: int = 20, pop_size: int = 50, verbose: bool = True):
-    """Run the evolutionary process."""
+def evolve(generations: int = 20, pop_size: int = 50, verbose: bool = True,
+           lamarckian: bool = True):
+    """
+    Run the evolutionary process.
+    
+    lamarckian: If True, agents are trained via backprop before fitness evaluation.
+                Evolution then selects for *topologies* that learn well,
+                not just lucky weight initialization. (Lamarckian because
+                learned weights are not inherited — offspring get fresh weights
+                from embryogenesis.)
+    """
     hp = HyperParams()
     hp.POP_SIZE = pop_size
+    
+    if not lamarckian:
+        hp.BACKPROP_EPOCHS = 0
     
     # Generate dataset
     data_x, data_y = generate_retina_dataset()
@@ -640,6 +817,8 @@ def evolve(generations: int = 20, pop_size: int = 50, verbose: bool = True):
         print(f"Class balance: {np.mean(data_y):.3f}")
         print(f"Population: {pop_size}, Generations: {generations}")
         print(f"Grid: {hp.SPACE_X}x{hp.SPACE_Y}x{hp.SPACE_Z}")
+        mode = "Lamarckian" if hp.BACKPROP_EPOCHS > 0 else "Darwinian"
+        print(f"Mode: {mode}" + (f" ({hp.BACKPROP_EPOCHS} epochs backprop per agent)" if hp.BACKPROP_EPOCHS > 0 else ""))
         print()
     
     # Initialize population with connection + insertion genes
@@ -665,11 +844,25 @@ def evolve(generations: int = 20, pop_size: int = 50, verbose: bool = True):
     for gen in range(generations):
         t0 = time.time()
         
-        # Evaluate fitness
+        # Connection cost warmup: no parsimony pressure early on
+        # to let topology diversity survive
+        if gen < hp.CONNECTION_COST_WARMUP:
+            effective_cost = 0.0
+        else:
+            effective_cost = hp.CONNECTION_COST
+        
+        # Evaluate fitness (with optional backprop for Lamarckian evolution)
         fitnesses = []
         for agent in population:
-            f = agent.get_fitness(data_x, data_y)
-            fitnesses.append(f)
+            if hp.BACKPROP_EPOCHS > 0:
+                agent.train(data_x, data_y, 
+                           epochs=hp.BACKPROP_EPOCHS,
+                           lr=hp.BACKPROP_LR,
+                           batch_size=hp.BACKPROP_BATCH_SIZE)
+            accuracy = agent.get_accuracy(data_x, data_y)
+            cost = effective_cost * agent.n_connections
+            agent.fitness = accuracy - cost
+            fitnesses.append(agent.fitness)
         
         fitnesses = np.array(fitnesses)
         ranked = np.argsort(-fitnesses)  # Best first
@@ -685,10 +878,11 @@ def evolve(generations: int = 20, pop_size: int = 50, verbose: bool = True):
         gen_time = time.time() - t0
         
         if verbose:
+            hidden = sum(1 for n in best_agent.nodes if n.node_type == 'hidden')
             print(f"Gen {gen:3d} | Best: {best_fitness:.4f} "
                   f"(acc={best_agent.get_accuracy(data_x, data_y):.4f}) | "
                   f"Mean: {mean_fitness:.4f} | "
-                  f"Nodes: {best_agent.n_nodes:3d} | "
+                  f"Nodes: {best_agent.n_nodes:3d} (H={hidden:2d}) | "
                   f"Conns: {best_agent.n_connections:3d} | "
                   f"Genes: {len(best_agent.genes):3d} | "
                   f"Time: {gen_time:.2f}s")
@@ -723,7 +917,10 @@ def evolve(generations: int = 20, pop_size: int = 50, verbose: bool = True):
 if __name__ == '__main__':
     print("DENT v2 — Distributed Embryogenesis of Neural Topologies")
     print("=" * 60)
-    pop, best_hist, mean_hist = evolve(generations=15, pop_size=30, verbose=True)
+    print("\n--- Lamarckian mode (backprop + evolution) ---")
+    pop, best_hist, mean_hist = evolve(
+        generations=15, pop_size=30, verbose=True, lamarckian=True
+    )
     
     print(f"\nFinal best fitness: {best_hist[-1]:.4f}")
     print(f"Fitness improvement: {best_hist[-1] - best_hist[0]:.4f}")
