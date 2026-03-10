@@ -90,6 +90,6 @@ See __log.txt__ for historical developments on the project, concerns, and possib
 
 ## Future Work
 
-- Optimize neurogenesis runtime
+- Optimize neurogenesis runtime --  Currently, there are critical inefficiencies in the algorithm. For example, neighboring area selection, et cetera.  Real biological processes are complex and computationally expensive to simulate.  The principle behind evolutionary algorithms is to find approximate processes that are similarly effective but not so expensive. The gene codes in this project is an example.  Future work includes extending this principle to other parts of the project so that it can scale.
 - Looks like some genes would create too much useless nodes. Add constraint to prevent this
 - More complicated test cases
