@@ -1,0 +1,22 @@
+{
+  "experiment": "Ablation study — synaptogenesis",
+  "date": "2026-03-10",
+  "question": "Is synaptogenesis the key innovation?",
+  "conditions": {
+    "with_synaptogenesis": {
+      "best_accuracy": 1.0000,
+      "generations_to_100pct": 23,
+      "best_connections": 252,
+      "notes": "100% accuracy, modular topologies emerge"
+    },
+    "without_synaptogenesis": {
+      "best_accuracy": 0.8438,
+      "plateau_gen": 3,
+      "best_connections": 35,
+      "notes": "Stuck near linear classifier ceiling. Hidden nodes have 1 input each — linear pass-throughs."
+    }
+  },
+  "conclusion": "Synaptogenesis is the critical innovation. Without it, accuracy plateaus at ~84% regardless of backprop epochs, topology depth, or evolution time. The mechanism gives hidden nodes multi-input connectivity, enabling non-linear computation.",
+  "improvement": "15.62 percentage points (84.38% → 100.0%)",
+  "all_other_params_identical": true
+}
