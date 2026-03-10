@@ -1,0 +1,46 @@
+{
+  "experiment": "Deep topology with synaptogenesis",
+  "date": "2026-03-10",
+  "result": "100% accuracy on retina task",
+  "hyperparameters": {
+    "population": 30,
+    "generations": 30,
+    "backprop_epochs": 200,
+    "backprop_lr": 0.08,
+    "connection_cost": 0.00005,
+    "connection_cost_warmup": 20,
+    "modularity_bonus": 0.1,
+    "modularity_warmup": 5,
+    "prob_ins_node": 0.55,
+    "prob_mutate_gene": 0.40,
+    "grid": "30x30x30"
+  },
+  "key_genes": "Direct AddConnection + InsertNode + second InsertNode per input-output pair",
+  "trajectory": {
+    "gen_0": 0.8516,
+    "gen_5": 0.8828,
+    "gen_7": 0.9180,
+    "gen_8": 0.9453,
+    "gen_13": 0.9570,
+    "gen_17": 0.9805,
+    "gen_21": 0.9961,
+    "gen_23": 1.0000,
+    "gen_28": 1.0000,
+    "gen_29": 1.0000
+  },
+  "best_compact_topology": {
+    "nodes": 46,
+    "hidden": 36,
+    "connections": 252,
+    "modularity_Q": 0.321
+  },
+  "notes": [
+    "Synaptogenesis is the critical innovation — gives hidden nodes multi-input connectivity",
+    "Deeper starting topology (2 InsertNode genes per path) helps but synaptogenesis matters more",
+    "200 BP epochs needed to properly evaluate complex topologies",
+    "Low connection cost lets topologies grow before pruning kicks in",
+    "Tournament selection outperforms NEAT speciation for this problem size",
+    "Modularity Q ~0.33 confirms modular structure is emerging",
+    "Reference: 3-layer MLP (32,16) achieves 98.4% at 1000 epochs"
+  ]
+}
