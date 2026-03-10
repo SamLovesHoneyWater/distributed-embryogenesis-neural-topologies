@@ -1,0 +1,23 @@
+DENT v3 — Deep Topology Experiment Results
+==========================================
+Date: 2026-03-10
+Config: pop=30, gen=30, BP=200 epochs, lr=0.08
+Grid: 30x30x30, conn_cost=0.00005, mod_bonus=0.1
+Initial genes: AddConn + InsertNode + InsertNode (2-layer depth)
+
+Gen   0 | acc=0.8516 | N=26(H=16) C=94  Q=0.157
+Gen   3 | acc=0.8750 | N=31(H=21) C=155 Q=0.218
+Gen   5 | acc=0.8828 | N=28(H=18) C=128 Q=0.166
+Gen   6 | acc=0.8906 | N=32(H=22) C=157 Q=0.148
+Gen   7 | acc=0.9180 | N=28(H=18) C=122 Q=0.193
+Gen   8 | acc=0.9453 | N=29(H=19) C=114 Q=0.130
+Gen  13 | acc=0.9570 | N=29(H=19) C=107 Q=0.163
+Gen  17 | acc=0.9805 | N=64(H=54) C=485 Q=0.314
+Gen  21 | acc=0.9961 | N=62(H=52) C=468 Q=0.320
+Gen  23 | acc=1.0000 | N=72(H=62) C=572 Q=0.331  *** PERFECT ***
+Gen  28 | acc=1.0000 | N=46(H=36) C=252 Q=0.321  *** PERFECT ***
+Gen  29 | acc=1.0000 | N=57(H=47) C=376 Q=0.189  *** PERFECT ***
+
+Best ever accuracy: 1.0000 (100%)
+
+Key: Synaptogenesis + deep initial topology + 200 BP epochs + tanh + low parsimony
